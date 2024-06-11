@@ -2,17 +2,17 @@ openapi: "3.0.0"
 info:
   title: Workers API
   version: 1.0.0
-  summary: An API to handle the workers' status
+  summary: An API to handle the workers' related requests
   description: |-
     There are two tags: [common] and [workers]
     The tag [common] handles the service status
-    The tag [workers] handles the workers' status
+    The tag [workers] handle the workers' related requests
 
 tags:
   - name: common
     description: Common endpoints
   - name: workers
-    description: Workers' service endpoints
+    description: Workers' endpoints
 
 paths:
   /health:
@@ -31,7 +31,7 @@ paths:
   /request:
     post:
       operationId: RawRequest
-      summary: Send a request
+      summary: Process a request
       description: A request can be an Upsert, a Select or a Delete of Workers. 
       tags:
         - workers

@@ -1,0 +1,99 @@
+openapi: "3.0.0"
+info:
+  title: Cache for Workers Location API
+  version: 1.0.0
+  summary: An API to handle the service's related requests
+  description: |-
+    There are two tags: [common] and [service]
+    The tag [common] handle the service status
+    The tag [service] handle the service's related requests
+
+tags:
+  - name: common
+    description: Common endpoints
+  - name: service
+    description: Service's endpoints
+
+paths:
+  /health:
+    get:
+      operationId: HealthCheck
+      summary: Returns OK if healthy.
+      tags:
+        - common
+      responses:
+        '200':
+          content: {}
+          description: OK.
+        default:
+          content: {}
+          description: Unknown Error
+  /cache:
+    post:
+      operationId: Cache
+      summary: Process a query to the cache
+      description: |-
+        A request is composed by a list of Worker's IDs and a timestamp.
+      tags:
+        - service
+      requestBody:
+        content:
+          application/x-binary:
+            schema:
+              $ref: '#/components/schemas/Request'
+            examples:
+              'Query': 
+                summary: Query Workers 1 and 2
+                value: '[]'
+        description: The byte encoded request
+        required: true
+      responses:
+        '200':
+          description: |-
+            200 response
+          content:
+            application/x-binary:
+              schema:
+                $ref: '#/components/schemas/Response'
+              description: The byte encoded response.
+              examples:
+                'Response': 
+                  summary: Worker 1 with Location 0 and Worker 2 with Location 1
+                  value: '[]'
+        default:
+          content: {}
+          description: Unknown Error
+components:
+  parameters:
+  schemas:
+    'Request':
+      type: array
+      items:
+        $ref: '#/components/schemas/Id'
+    'Id':
+      type: integer
+      description: Integer representing the worker's Id
+    'Status':
+      type: integer
+      oneOf:
+        - const: 0
+          description: Unavailable
+        - const: 1
+          description: Local
+        - const: 2
+          description: Remote
+    'Response':
+      type: array
+      items:
+        $ref: '#/components/schemas/ResponseItem'
+    'ResponseItem':
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        status:
+          $ref: '#/components/schemas/Status'
+      required:
+        - id
+        - status
+      description: Object with the worker's Id and Status

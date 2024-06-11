@@ -1,0 +1,9 @@
+package: common
+generate:
+  echo-server: true
+  embedded-spec: true
+output-options:
+  include-tags:
+  - common
+  skip-prune: true
+output: ./v1/generated/common/routes.go

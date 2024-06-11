@@ -1,0 +1,9 @@
+package: service
+generate:
+  echo-server: true
+  embedded-spec: true
+output-options:
+  include-tags:
+  - service
+  skip-prune: true
+output: ./v1/generated/service/routes.go

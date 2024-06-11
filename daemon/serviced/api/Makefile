@@ -2,7 +2,7 @@ default: build
 
 OAPI := ./v1/generated/model/model.yaml
 OAPI += ./v1/generated/common/routes.yaml
-OAPI += ./v1/generated/workers/routes.yaml
+OAPI += ./v1/generated/service/routes.yaml
 
 build:
 	@for dir in $(OAPI); do \

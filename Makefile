@@ -28,7 +28,7 @@ GOLDFLAGS 	:= $(GOLDFLAGS_BASE)
 
 default: build
 
-build:
+build: clean tidy
 	go build -o ./build/ $(GOTRIMPATH) $(GOTAGS) $(GOBUILDMODE) -ldflags="$(GOLDFLAGS)" ./...
 
 clean:
@@ -43,5 +43,9 @@ tidy:
 		(cd $$dir && go mod tidy); \
 	done
 
-api:
+api: oapi-codegen
 	cd daemon/workersd/api && make
+	cd daemon/serviced/api && make
+
+oapi-codegen:
+	go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
