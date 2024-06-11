@@ -1,0 +1,170 @@
+openapi: "3.0.0"
+info:
+  title: Workers API
+  version: 1.0.0
+  summary: An API to handle the workers' status
+  description: |-
+    There are two tags: [common] and [workers]
+    The tag [common] handles the service status
+    The tag [workers] handles the workers' status
+
+tags:
+  - name: common
+    description: Common endpoints
+  - name: workers
+    description: Workers' service endpoints
+
+paths:
+  /health:
+    get:
+      operationId: HealthCheck
+      summary: Returns OK if healthy.
+      tags:
+        - common
+      responses:
+        '200':
+          content: {}
+          description: OK.
+        default:
+          content: {}
+          description: Unknown Error
+  /request:
+    post:
+      operationId: RawRequest
+      summary: Send a request
+      description: A request can be an Upsert, a Select or a Delete of Workers. 
+      tags:
+        - workers
+      requestBody:
+        content:
+          application/x-binary:
+            schema:
+              $ref: '#/components/schemas/Request'
+            examples:
+              'Upsert': 
+                summary: Upsert Worker 1 with Status 1
+                value: '[130 164 116 121 112 101 1 167 119 111 114 107 101 114 115 145 130 162 105 100 1 166 115 116 97 116 117 115 1]'
+              'Select': 
+                summary: Select Worker 1
+                value: '[130 163 105 100 115 145 1 164 116 121 112 101 2]'
+              'Delete': 
+                summary: Delete Worker 1
+                value: '[130 163 105 100 115 145 1 164 116 121 112 101 3]'
+        description: The byte encoded request
+        required: true
+      responses:
+        '200':
+          description: |-
+            200 response
+          content:
+            application/x-binary:
+              schema:
+                $ref: '#/components/schemas/Response'
+              description: The byte encoded response.
+              examples:
+                'Response': 
+                  summary: Worker 1 with Old Status 0 and New Status 0
+                  value: '[145 131 162 105 100 1 163 110 101 119 0 163 111 108 100 0]'
+        default:
+          content: {}
+          description: Unknown Error
+components:
+  parameters:
+  schemas:
+    'Request':
+      type: object
+      properties:
+        'type':
+          $ref: '#/components/schemas/Type'
+      discriminator:
+        propertyName: 'type'
+        oneOf:
+          - $ref: '#/components/schemas/Upsert'
+          - $ref: '#/components/schemas/Select'
+          - $ref: '#/components/schemas/Delete'
+      required:
+        - type
+    'Type':
+      type: integer
+      description: |-
+        { 1 - Upsert, 2 - Select, 3 - Delete }
+      oneOf:
+        - description: 'Upsert'
+          const: 1
+        - description: 'Select'
+          const: 2
+        - description: 'Delete'
+          const: 3
+    'Upsert':
+      allOf:
+        - $ref: '#/components/schemas/Request'
+        - type: object
+          properties:
+            workers:
+              type: array
+              items:
+                $ref: '#/components/schemas/Record'
+          required:
+            - workers
+    'Select':
+      allOf:
+        - $ref: '#/components/schemas/Request'
+        - type: object
+          properties:
+            ids:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+          required:
+            - ids
+    'Delete':
+      allOf:
+        - $ref: '#/components/schemas/Request'
+        - type: object
+          properties:
+            ids:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+          required:
+            - ids
+    'Record':
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        status:
+          $ref: '#/components/schemas/Status'
+      required:
+        - id
+        - status
+      description: Object with the worker's Id and Status
+    'Id':
+      type: integer
+      description: Integer representing the worker's Id
+    'Status':
+      type: integer
+      oneOf:
+        - const: 0
+          description: Unavailable
+        - const: 1
+          description: Local
+        - const: 2
+          description: Remote
+    'Response':
+      type: array
+      items:
+        $ref: '#/components/schemas/ResponseItem'
+    'ResponseItem':
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        old:
+          $ref: '#/components/schemas/Status'
+        new:
+          $ref: '#/components/schemas/Status'
+      required:
+        - id
+        - old
+        - new

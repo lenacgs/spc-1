@@ -1,0 +1,9 @@
+package: workers
+generate:
+  echo-server: true
+  embedded-spec: true
+output-options:
+  include-tags:
+  - workers
+  skip-prune: true
+output: ./v1/generated/workers/routes.go
