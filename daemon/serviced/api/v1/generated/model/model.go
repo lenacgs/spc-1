@@ -7,7 +7,15 @@ package model
 type Id = int
 
 // Request defines model for Request.
-type Request = []Id
+type Request struct {
+	// Ids Array of integers representing the worker's Id
+	Ids []Id `json:"ids"`
+
+	// Timestamp Integer representing the current timestamp.
+	// Your Service clock must be updated with this value.
+	// Lower Timestamps do not update the Service clock.
+	Timestamp Timestamp `json:"timestamp"`
+}
 
 // Response defines model for Response.
 type Response = []ResponseItem
@@ -21,3 +29,8 @@ type ResponseItem struct {
 
 // Status defines model for Status.
 type Status = int
+
+// Timestamp Integer representing the current timestamp.
+// Your Service clock must be updated with this value.
+// Lower Timestamps do not update the Service clock.
+type Timestamp = int

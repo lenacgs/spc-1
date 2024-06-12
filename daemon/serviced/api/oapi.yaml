@@ -67,9 +67,24 @@ components:
   parameters:
   schemas:
     'Request':
-      type: array
-      items:
-        $ref: '#/components/schemas/Id'
+      type: object
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          description: Array of integers representing the worker's Id
+      required:
+        - timestamp
+        - ids
+    'Timestamp':
+      type: integer
+      description: |-
+        Integer representing the current timestamp.        
+        Your Service clock must be updated with this value.
+        Lower Timestamps do not update the Service clock.
     'Id':
       type: integer
       description: Integer representing the worker's Id
