@@ -13,4 +13,9 @@ type Local struct {
 
 	RestReadTimeoutSeconds  int
 	RestWriteTimeoutSeconds int
+
+	CacheUnavailableTTL int
+	CacheLocationTTL    int
+
+	CacheMaxCapacity int
 }

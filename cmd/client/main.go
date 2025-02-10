@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	lamport "github.com/ISSuh/logical-clock"
 	"github.com/chzyer/readline"
 )
 
@@ -17,7 +18,8 @@ var completer = readline.NewPrefixCompleter(
 	readline.PcItem("put"),
 	readline.PcItem("del"),
 	readline.PcItem("help"),
-)
+	readline.PcItem("service"),
+	readline.PcItem("cache"))
 
 func usage(w io.Writer) {
 	io.WriteString(w, "commands:\n")
@@ -165,6 +167,30 @@ func del(client *RestClient, cmd []string) {
 	}
 }
 
+func cache(client *RestClient, cmd []string, clock *lamport.LamportClock) {
+	if !checkConnected(client) {
+		return
+	}
+
+	args := cmd[1:]
+
+	workers, err := parseInts(args, 0)
+	if err != nil {
+		log.Println("Error", err)
+	}
+
+	res, err := client.Cache(workers, clock)
+
+	if err != nil {
+		log.Println("Error", err.Error())
+		return
+	}
+
+	for n, worker := range workers {
+		log.Printf("Worker %d is %d\n", worker, res[n].Status)
+	}
+}
+
 func filterInput(r rune) (rune, bool) {
 	switch r {
 	// block CtrlZ feature
@@ -192,6 +218,8 @@ func main() {
 	l.CaptureExitSignal()
 
 	var restClient *RestClient
+	var clock = lamport.NewLamportClock()
+
 	log.SetOutput(l.Stderr())
 	for {
 		line, err := l.Readline()
@@ -224,6 +252,9 @@ func main() {
 
 		case cmd[0] == "help":
 			usage(l.Stderr())
+
+		case cmd[0] == "cache":
+			cache(restClient, cmd, clock)
 
 		default:
 			log.Println("Unknown command", strconv.Quote(line))

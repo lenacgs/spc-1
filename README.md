@@ -44,7 +44,7 @@ or
 connect localhost:8080
 ```
 
-Put Worker with ID 1 and Status 2:
+Put Worker with ID 1 and Location 2:
 
 ```shell
 put 1 2

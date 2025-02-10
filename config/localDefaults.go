@@ -11,4 +11,7 @@ var defaultLocal = Local{
 	EndpointAddress:         "127.0.0.1:0",
 	RestReadTimeoutSeconds:  15,
 	RestWriteTimeoutSeconds: 120,
+	CacheLocationTTL:        1000,
+	CacheUnavailableTTL:     100,
+	CacheMaxCapacity:        100,
 }

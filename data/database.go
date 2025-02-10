@@ -19,13 +19,13 @@ type database struct {
 	mu  deadlock.Mutex
 	log logging.Logger
 
-	data map[protocol.WorkerID]protocol.Status
+	data map[protocol.WorkerID]protocol.Location
 }
 
 func MakeDatabase(log logging.Logger) (Database, error) {
 	db := new(database)
 	db.log = log.With("database", "internal")
-	db.data = make(map[protocol.WorkerID]protocol.Status)
+	db.data = make(map[protocol.WorkerID]protocol.Location)
 
 	return db, nil
 }

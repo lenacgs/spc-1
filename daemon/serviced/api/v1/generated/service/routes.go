@@ -20,7 +20,7 @@ import (
 type ServerInterface interface {
 	// Process a query to the cache
 	// (POST /cache)
-	Cache(ctx echo.Context) error
+	RawRequest(ctx echo.Context) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -33,7 +33,7 @@ func (w *ServerInterfaceWrapper) Cache(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Cache(ctx)
+	err = w.Handler.RawRequest(ctx)
 	return err
 }
 

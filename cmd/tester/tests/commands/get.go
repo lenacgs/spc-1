@@ -16,7 +16,7 @@ func Get(ids []cli.Id, cur []cli.Status) Command {
 	var err error
 
 	if len(ids) != len(cur) {
-		err = fmt.Errorf("del's old status size different than ids size")
+		err = fmt.Errorf("get's old status size different than ids size")
 	}
 
 	return &get{

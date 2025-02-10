@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	lamport "github.com/ISSuh/logical-clock"
 	"net/http"
 	"net/url"
 
-	"gitlab.com/sibsfps/spc/spc-1/daemon/workersd/api/v1/generated/model"
+	servicemodel "gitlab.com/sibsfps/spc/spc-1/daemon/serviced/api/v1/generated/model"
+	workersmodel "gitlab.com/sibsfps/spc/spc-1/daemon/workersd/api/v1/generated/model"
 	"gitlab.com/sibsfps/spc/spc-1/protocol"
 )
 
@@ -19,6 +21,7 @@ type RestClient struct {
 const (
 	healthCheckEndpoint = "/v1/health"
 	requestEndpoint     = "/v1/request"
+	cacheEndpoint       = "/v1/cache"
 )
 
 func MakeRestClient(url url.URL) (*RestClient, error) {
@@ -60,12 +63,12 @@ func encode(v interface{}) (*bytes.Buffer, error) {
 		return nil, fmt.Errorf("could not encode request: %v", err)
 	}
 
-	fmt.Printf("%v\n", buff.Bytes())
+	fmt.Printf("encoded request: %v\n", buff.Bytes())
 
 	return buff, nil
 }
 
-func (rc *RestClient) doRequest(stmt interface{}) (model.Response, error) {
+func (rc *RestClient) doRequest(stmt interface{}) (workersmodel.Response, error) {
 	buff, err := encode(stmt)
 	if err != nil {
 		return nil, err
@@ -80,7 +83,7 @@ func (rc *RestClient) doRequest(stmt interface{}) (model.Response, error) {
 		return nil, fmt.Errorf("invalid status code response: %v", resp.StatusCode)
 	}
 
-	res := model.Response{}
+	res := workersmodel.Response{}
 	dec := protocol.NewDecoder(resp.Body)
 	err = dec.Decode(&res)
 	if err != nil {
@@ -90,8 +93,33 @@ func (rc *RestClient) doRequest(stmt interface{}) (model.Response, error) {
 	return res, nil
 }
 
-func (rc *RestClient) Get(ids []model.Id) (model.Response, error) {
-	stmt := model.Select{
+func (rc *RestClient) doRequestCache(stmt interface{}) (servicemodel.Response, error) {
+	buff, err := encode(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	urlString := rc.serverURL.String() + cacheEndpoint
+	resp, err := rc.httpClient.Post(urlString, "application/x-binary", buff)
+	if err != nil {
+		return nil, fmt.Errorf("could not execute http request: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("invalid status code response: %v", resp.StatusCode)
+	}
+
+	res := servicemodel.Response{}
+	dec := protocol.NewDecoder(resp.Body)
+	err = dec.Decode(&res)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse http response: %v", err)
+	}
+
+	return res, nil
+}
+
+func (rc *RestClient) Get(ids []workersmodel.Id) (workersmodel.Response, error) {
+	stmt := workersmodel.Select{
 		Type: 2,
 		Ids:  ids,
 	}
@@ -99,23 +127,23 @@ func (rc *RestClient) Get(ids []model.Id) (model.Response, error) {
 	return rc.doRequest(stmt)
 }
 
-func (rc *RestClient) Put(ids []model.Id, statuses []model.Status) (model.Response, error) {
+func (rc *RestClient) Put(ids []workersmodel.Id, statuses []workersmodel.Status) (workersmodel.Response, error) {
 	if len(ids) != len(statuses) {
 		return nil, fmt.Errorf("missing status")
 	}
 
-	workers := make([]model.Record, 0)
+	workers := make([]workersmodel.Record, 0)
 	for i := range ids {
 		workers = append(
 			workers,
-			model.Record{
+			workersmodel.Record{
 				Id:     ids[i],
 				Status: statuses[i],
 			},
 		)
 	}
 
-	stmt := model.Upsert{
+	stmt := workersmodel.Upsert{
 		Type:    1,
 		Workers: workers,
 	}
@@ -123,11 +151,21 @@ func (rc *RestClient) Put(ids []model.Id, statuses []model.Status) (model.Respon
 	return rc.doRequest(stmt)
 }
 
-func (rc *RestClient) Del(ids []model.Id) (model.Response, error) {
-	stmt := model.Delete{
+func (rc *RestClient) Del(ids []workersmodel.Id) (workersmodel.Response, error) {
+	stmt := workersmodel.Delete{
 		Type: 3,
 		Ids:  ids,
 	}
 
 	return rc.doRequest(stmt)
+}
+
+func (rc *RestClient) Cache(ids []servicemodel.Id, clock *lamport.LamportClock) (servicemodel.Response, error) {
+	clock.Increase()
+	stmt := servicemodel.Request{
+		Ids:       ids,
+		Timestamp: servicemodel.Timestamp(clock.Time()),
+	}
+
+	return rc.doRequestCache(stmt)
 }

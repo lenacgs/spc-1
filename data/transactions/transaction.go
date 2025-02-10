@@ -13,6 +13,6 @@ type Transaction struct {
 
 type WorkerMutation struct {
 	Id  protocol.WorkerID `codec:"id"`
-	Old protocol.Status   `codec:"old"`
-	New protocol.Status   `codec:"new"`
+	Old protocol.Location `codec:"old"`
+	New protocol.Location `codec:"new"`
 }
