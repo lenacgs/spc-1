@@ -64,6 +64,7 @@ func MakeCache(log logging.Logger, cfg config.Local) (Cache, error) {
 	cache.maxCapacity = cfg.CacheMaxCapacity
 	cache.unavailableTTL = uint64(cfg.CacheUnavailableTTL)
 	cache.locationTTL = uint64(cfg.CacheLocationTTL)
+	cache.creationOrder = make([]protocol.WorkerID, cache.maxCapacity)
 
 	cache.restClient, err = requests.MakeRestClient(*requests.MakeUrl(workersApiUrl))
 	if err != nil {
